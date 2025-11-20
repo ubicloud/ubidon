@@ -282,7 +282,7 @@ application firewalls or a CDN.
 - It's open source
 - Read the source!
 - It can run, organize, and secure a non-trivial Rails application
-- We focus on low costs, privacy, portability, security
+- We focus on fair pricing, privacy, portability, security
 - We have a pretty advanced managed Postgres offering, though I did
   not discuss it much.
 - For private cloud: if you want to organize a few-to-many cabinets of physical servers with Ubicloud, contact us

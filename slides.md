@@ -117,7 +117,8 @@ One of the dependencies, valkey, I host on a regular VM: it is not
 exposed to the Internet, but must make valkey available to all of
 mastodon's process types.
 
-The Postgres dependency is fulfilled using Ubicloud's managed service.
+The Postgres dependency is fulfilled using Ubicloud's managed Postgres
+service.
 
 Of Mastodon's three processes, only two need to listen on any ports,
 and both of those are to serve a browser.
@@ -137,12 +138,13 @@ and both of those are to serve a browser.
 
 ???
 
-- The script I ran at the beginning of the talk, in just a few seconds, organizes Mastodon in Ubicloud.
-- ...and I want to show you some of the principles of that organization.
-- As is the case in multiple clouds, the way we'll understand the
-  organization is via networking constructs.
-- This is an area where every hyperscaler cloud is quite distinct from
-  the others.
+- The script I ran at the beginning of the talk, in just a few
+  seconds, organized Mastodon in Ubicloud.
+- ...and I want to discuss some of the principles of that organization.
+- The way we'll understand the organization is via networking
+  constructs.
+- Networking data models is an area where every hyperscaler cloud is
+  subtly distinct from the others.
 - Ubicloud, likewise, proposes its own ideas about how to organize
   networks and what is inside them.
 
@@ -165,14 +167,15 @@ and both of those are to serve a browser.
 - This makes no-individual-VM-firewalls usable
 
 ???
-- The most important organizing objects in Ubicloud are Subnets, and Firewalls.
-- Firewall entities allow composition of rule sets, such as "port 22
-  from internet" for SSH but also "https for a web server"
+- The most important organizing objects in Ubicloud are Subnets and Firewalls.
+- Firewalls allow composition of rules, such as "port 22 from
+  internet" for secure shell, and independently, "https for a web
+  server"
 - Subnets apply zero or more firewalls uniformly to every VM inside
 - There is no per-VM firewall!
 - Seen in the table are the firewalls and subnets I chose for Mastodon
-  - You can see every subnet lets me use SSH for this demo
-  - sidekiq *only* listens on SSH for the demo...
+  - You can see every subnet lets me use secure shell
+  - sidekiq's worker subnet *only* listens to let me use secure shell
   - But `web` and `streaming` allow HTTPS...
   - Valkey has its own firewall rule. It contains references to all
     the application subnets...and *not* the Internet.
@@ -185,8 +188,8 @@ and both of those are to serve a browser.
   quota complexity.
 - In exchange, we try to make subnets easy to create and connect
   together, even if a subnet has a single VM sometimes.
-- Under the hood: all inter-subnet traffic is dual-stacked with IPv6 and IPv4,
-  and encrypted.
+- Under the hood: all private subnet traffic is encrypted: use of TLS
+  is "belt and suspenders," but you could omit it.
 
 ---
 
@@ -246,7 +249,7 @@ every day.
 We do things this way so we can use `nftables` to provide a Layer 4
 load balancer.
 
-Load balancers of this type have the benefit of very low overhead and
+Load balancers of this type have the benefit of low overhead and
 excellent composition with all sorts of protocols: that's why
 websockets, or even a load balanced SSH pool, can work without a fuss.
 
@@ -270,7 +273,6 @@ application firewalls or a CDN.
 * Can we see web socket is active?
 * How about clicking through to sidekiq and pghero?
 
-
 ---
 
 
@@ -281,6 +283,8 @@ application firewalls or a CDN.
 - Read the source!
 - It can run, organize, and secure a non-trivial Rails application
 - We focus on low costs, privacy, portability, security
-- We have managed Postgres
+- We have a pretty advanced managed Postgres offering, though I did
+  not discuss it much.
 - For private cloud: if you want to organize a few-to-many cabinets of physical servers with Ubicloud, contact us
+- **Come by and say hi and talk shop about infrastructure for fun**
 - THANK YOU

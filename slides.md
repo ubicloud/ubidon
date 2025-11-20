@@ -2,6 +2,12 @@
 
 a.k.a. "ubidon"
 
+See the slides and source code for this talk at
+https://github.com/ubicloud/ubidon
+
+Getting out your laptop or phone to skim source or speaker notes
+is encouraged!
+
 ---
 
 ## What is Ubicloud?
@@ -151,14 +157,20 @@ features.
 
 ???
 
-- These are the identifiers seen in the provision script.
-- Firewall entities allow factoring/reuse of rule sets
-- Firewalls are conventional, being additive lists of allow-rules.
-- But subnets are less conventional:
-- Subnets apply zero or more firewalls uniformly to every VM inside
-- There is no per-VM firewall!
-- Ubicloud's subtle guidance: subnets, being *contiguous* IP address space is
-  deeply related to how firewalls work...
+- Subnet & Firewall ideas in general:
+  - Firewall entities allow factoring/reuse of rule sets
+  - Firewalls are conventional, being additive lists of allow-rules.
+  - But subnets are less conventional:
+  - Subnets apply zero or more firewalls uniformly to every VM inside
+  - There is no per-VM firewall!
+- Seen in the table are exact identifiers seen in the provision script.
+  - You can see every subnet lets me use SSH for this demo
+  - sidekiq *only* listens on SSH for the demo...
+  - But only some allow HTTP...
+  - Valkey has its own firewall rule. It contains references to all
+    the application subnets...and *not* the Internet.
+- Ubicloud's design theory: subnets, being *contiguous* IP address
+  space is deeply related to how firewalls work...
   - how efficient they are
   - what quotas we must impose
 - Other firewall management approaches that explode into many non-contiguous
@@ -190,12 +202,9 @@ and continue.
 - In our example, just one VM per load balancer
 - They help with TLS, with a twist
 - Key material is made available to your instance:
-  ```
-  ```
-
+```
 http://[FD00:0B1C:100D:5afe:CE::]/load-balancer/key.pem
 http://[FD00:0B1C:100D:5afe:CE::]/load-balancer/cert.pem
-
 ```
 - We don't terminate TLS, but we can make it easy for *you* to terminate it
 - `ubidon-provision.bash` sets up a timed script that refreshes certificates.

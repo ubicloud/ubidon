@@ -23,24 +23,29 @@ is encouraged!
 
 ???
 
-- Welcome everyone. Today I'm going to give you a demo of Ubicloud, setting up a
-  non-trivial web application, an instance of Mastodon, which has Rails and Node
-  components.
+- Welcome everyone. Today I'm going present to you a demonstration of
+  Ubicloud.
 
 - Ubicloud an open-source infrastructure cloud: think load balancers, virtual
   machines databases, etc. As a shorthand, we refer to ourselves as an
   open-source alternative to AWS.
 
-- On the name: "Ubi": the "ubiquitous" infrastructure cloud, as we have
-  obligations to portability and being able to run in diverse environments.
+- The demonstration is a script that sets up non-trivial web
+  application, an instance of Mastodon, which has Rails and Node
+  components.
 
-- Now that you have a sense of the company, let me start this demo script, so it
-  can run.
+- On the name of the company: "Ubi" is a contraction of "ubiquitous",
+  as we have obligations to portability and being able to run in
+  diverse environments.
+
+- Now that you have a sense of the company's purpose, let me start this
+  demo script, so it can run in the background.
 
 - **START ubidon-provision.bash NOW**
 
-- In a few seconds, all the Ubicloud networking, database, and VM arrangements
-  will be done, then it's mostly waiting on Linux/Docker stuff.
+- Now that that has started, and we've seen it quickly move through
+  making resources in Ubicloud, I'll multitask by discussing some
+  aspects of Ubicloud's implementation.
 
 ---
 
@@ -56,14 +61,23 @@ is encouraged!
 
 ???
 
-- Of special interest to this crowd is the bulk of the code is in Ruby: 85,000
-  physical source lines, about 50% of the length is tests.
+- Of special interest to this crowd is Ubicloud being written in Ruby:
+  85,000 physical source lines, and about 50% is tests.
 
-- The commit messages are generally detailed.
+- With its small size, and generally detailed commit messages, I
+  encourage you to get a copy of the source and look around.
 
-- Due to a quirk of history, not only is the code not Rails, but it has no
-  direct influence from Rails because the contact the engineering team has had
-  with Rails, even in the past, is minimal to none.
+- It has 100% branch coverage, so getting tests passing for a change
+  is a decent model of correctness.
+
+- Due to a quirk of history, not only is the code not Rails, but it
+  has no direct influence from Rails because the engineering team has
+  had minimal contact with Rails, even if they have substantial Ruby
+  experience.
+
+- I mention this because, you might read this and see something
+  interesting, or different.  I'm just trying to get you into the
+  source code.
 
 - Do we get good feature economy for our lines of code? You be the judge. I like
   to think so. It is among the reasons we use Ruby.
@@ -80,9 +94,10 @@ is encouraged!
 ???
 
 - Many of you are at least passingly familiar with Mastodon.
+- It's a federated microblogging implementation written using Rails
 - It looks nice, it has a mobile app, try it out one of these days.
-- Fewer of you are familiar with its major components and administration
-  features
+- But, fewer of you are familiar with its major components, which
+  inform how to organize it in any cloud, including Ubicloud.
 
 ---
 
@@ -95,16 +110,17 @@ is encouraged!
 
 ???
 
-Important thing to note here: three kinds of processes with different,
-interlocking network dependencies.
+Mastodon has three kinds of processes with different, interlocking
+network dependencies.
 
-One of the dependencies, valkey, I host on a regular VM
+One of the dependencies, valkey, I host on a regular VM: it is not
+exposed to the Internet, but must make valkey available to all of
+mastodon's process types.
 
-The Postgres dependency is fulfilled using Ubicloud's cloud managed version.
+The Postgres dependency is fulfilled using Ubicloud's managed service.
 
-A number of the staff and myself got our control plane experience writing and
-operating cloud Postgres services, so cloud Postgres is one of our more advanced
-features.
+Of Mastodon's three processes, only two need to listen on any ports,
+and both of those are to serve a browser.
 
 ---
 
@@ -121,21 +137,14 @@ features.
 
 ???
 
-- So what's this script I ran at the beginning the talk?
-- It organizes the dependencies and process types of Mastodon as intended by the
-  designers of Ubicloud.
-- By glancing at the web site from what it created, you will be more familiar
-  with how things "should" look.
-- I'll discuss some data models in the networking stack: they are both key to
-  how to organize and secure services for an application, and in detail, among
-  the least consistent implementations among cloud providers.
-- For example: AWS Subnets are zonal, unlike Azure, GCP, and Oracle Cloud, this
-  has deep ramifications.
-- There are other differences that all the clouds have with one another, their
-  consequences fill a stand-alone talk.
-- Though were I to present it, it would bore you to tears.
-- We introduced yet another way of doing things, but hopefully we came up with
-  something nice...said every designer at the time.
+- The script I ran at the beginning of the talk, in just a few seconds, organizes Mastodon in Ubicloud.
+- ...and I want to show you some of the principles of that organization.
+- As is the case in multiple clouds, the way we'll understand the
+  organization is via networking constructs.
+- This is an area where every hyperscaler cloud is quite distinct from
+  the others.
+- Ubicloud, likewise, proposes its own ideas about how to organize
+  networks and what is inside them.
 
 ---
 
@@ -156,37 +165,28 @@ features.
 - This makes no-individual-VM-firewalls usable
 
 ???
-
-- Subnet & Firewall ideas in general:
-  - Firewall entities allow factoring/reuse of rule sets
-  - Firewalls are conventional, being additive lists of allow-rules.
-  - But subnets are less conventional:
-  - Subnets apply zero or more firewalls uniformly to every VM inside
-  - There is no per-VM firewall!
-- Seen in the table are exact identifiers seen in the provision script.
+- The most important organizing objects in Ubicloud are Subnets, and Firewalls.
+- Firewall entities allow composition of rule sets, such as "port 22
+  from internet" for SSH but also "https for a web server"
+- Subnets apply zero or more firewalls uniformly to every VM inside
+- There is no per-VM firewall!
+- Seen in the table are the firewalls and subnets I chose for Mastodon
   - You can see every subnet lets me use SSH for this demo
   - sidekiq *only* listens on SSH for the demo...
-  - But only some allow HTTP...
+  - But `web` and `streaming` allow HTTPS...
   - Valkey has its own firewall rule. It contains references to all
     the application subnets...and *not* the Internet.
-- Ubicloud's design theory: subnets, being *contiguous* IP address
+- Ubicloud's design theory is subnets, being *contiguous* IP address
   space is deeply related to how firewalls work...
   - how efficient they are
-  - what quotas we must impose
+  - what quotas we must impose on their complexity
 - Other firewall management approaches that explode into many non-contiguous
   addresses impose abstraction leaks to the customer in performance, cost, and
   quota complexity.
-- In exchange, we try to make subnets easy to create and connect together to
-  build your apps, and de-emphasize one-off firewall rules on VMs that are in
-  mixed company in one address space.
-- We're working on making this conceit work great for our managed services and
-  third party managed services, because if you ever offered a managed service
-  where the customer base cared about firewalls on the big platforms, you know
-  how troublesome this can be!
+- In exchange, we try to make subnets easy to create and connect
+  together, even if a subnet has a single VM sometimes.
 - Under the hood: all inter-subnet traffic is dual-stacked with IPv6 and IPv4,
-  and encrypted, since we are often working on networks of varying security and
-  physical robustness.
-- Aside on encryption: all disks are likewise encrypted.
+  and encrypted.
 
 ---
 
@@ -209,6 +209,21 @@ http://[FD00:0B1C:100D:5afe:CE::]/load-balancer/cert.pem
 - We don't terminate TLS, but we can make it easy for *you* to terminate it
 - `ubidon-provision.bash` sets up a timed script that refreshes certificates.
 
+???
+
+Load balancers are another area we have reinterpred some well-known
+techniques to offer something portable, convenient, and inexpensive.
+
+We implement a DNS based load balancer.  Because the load balancer
+uses DNS, we can do a tiny bit more work to optionally solve an ACME
+DNS01 challenge for you with ZeroSSL/LetsEncrypt.
+
+The certificate key material is made available to your application via
+a metadata endpoint.
+
+The mastodon demo script sets up a timer to refresh these certificates
+every day.
+
 
 ---
 
@@ -223,8 +238,28 @@ http://[FD00:0B1C:100D:5afe:CE::]/load-balancer/cert.pem
 - Can use it directly on application nodes, as we do in this demo
 - Can compose well with dedicated subnets filled with your preferred proxy:
   - nginx, traefik, envoy, etc
-  - for path routing, caching, header rewriting, whatever
+  - for path routing, caching, header rewriting, session affinity, whatever
+- Intended for production use as an "origin" or "upstream" for CDNs/WAFs
 
+???
+
+We do things this way so we can use `nftables` to provide a Layer 4
+load balancer.
+
+Load balancers of this type have the benefit of very low overhead and
+excellent composition with all sorts of protocols: that's why
+websockets, or even a load balanced SSH pool, can work without a fuss.
+
+We embed these nftables rules at the host level along with your
+virtual machine.  This is why they have zero additional cost to you.
+
+The downside of a layer 4 load balancer is their flexibility is
+limited, and most importantly, they can't terminate TLS, pushing a
+painful secret management experience onto the simplest deployments.
+That's why we made it easy for you to terminate TLS yourself.
+
+These load balancers make good "origins" or "upstreams" for web
+application firewalls or a CDN.
 
 ---
 
@@ -241,10 +276,11 @@ http://[FD00:0B1C:100D:5afe:CE::]/load-balancer/cert.pem
 
 ## End Notes
 
-- Ubicloud: it's written in Ruby. You can read the source!
+- Ubicloud: it's written in Ruby.
+- It's open source
+- Read the source!
 - It can run, organize, and secure a non-trivial Rails application
-- We focus on low costs
-- It has managed Postgres
-- It also has a popular, and extremely
-- It's portable: if you want to organize a few cabinets of bare metal with Ubicloud, contact us
-```
+- We focus on low costs, privacy, portability, security
+- We have managed Postgres
+- For private cloud: if you want to organize a few-to-many cabinets of physical servers with Ubicloud, contact us
+- THANK YOU

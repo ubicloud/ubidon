@@ -15,7 +15,7 @@ server.mount_proc '/' do |req, res|
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Remark Slides - Metropolis Theme</title>
+          <title>Ubidon Slides</title>
           <meta charset="utf-8">
           <link rel="stylesheet" href="metropolis.css">
           <link rel="stylesheet" href="metropolis-fonts.css">

@@ -64,7 +64,7 @@ echo "Waiting for PostgreSQL connection string..."
 attempt=0
 while [ $attempt -lt 60 ]; do
   PG_CONN_RAW=$(ubi pg "${LOCATION}/${PREFIX}-pg" show -f connection-string 2>/dev/null || echo "")
-  DATABASE_URL=$(echo "$PG_CONN_RAW" | grep "connection_string:" | sed 's/connection_string: //' || echo "")
+  DATABASE_URL=$(echo "$PG_CONN_RAW" | grep "connection-string:" | sed 's/connection-string: //' || echo "")
   
   if [ -n "$DATABASE_URL" ] && [ "$DATABASE_URL" != "null" ]; then
     echo "PostgreSQL connection string available!"

@@ -103,15 +103,16 @@ echo "Database URL (Node): $DATABASE_URL_NODE"
 
 # 2. Create firewalls
 ubi fw "${LOCATION}/${PREFIX}-ssh-internet-fw" create --description="SSH access from internet"
-ubi fw "${LOCATION}/${PREFIX}-ssh-internet-fw" add-rule --start-port=22 --end-port=22 --description="SSH IPv6" "::/0"
-ubi fw "${LOCATION}/${PREFIX}-ssh-internet-fw" add-rule --start-port=22 --end-port=22 --description="SSH IPv4" "0.0.0.0/0"
+ubi fw "${LOCATION}/${PREFIX}-ssh-internet-fw" add-rule --start-port=22 --description="SSH IPv6" "::/0"
+ubi fw "${LOCATION}/${PREFIX}-ssh-internet-fw" add-rule --start-port=22 --description="SSH IPv4" "0.0.0.0/0"
 
 ubi fw "${LOCATION}/${PREFIX}-https-internet-fw" create --description="HTTPS access from internet"
-ubi fw "${LOCATION}/${PREFIX}-https-internet-fw" add-rule --start-port=443 --end-port=443 --description="HTTPS IPv6" "::/0"
-ubi fw "${LOCATION}/${PREFIX}-https-internet-fw" add-rule --start-port=443 --end-port=443 --description="HTTPS IPv4" "0.0.0.0/0"
+ubi fw "${LOCATION}/${PREFIX}-https-internet-fw" add-rule --start-port=443 --description="HTTPS IPv6" "::/0"
+ubi fw "${LOCATION}/${PREFIX}-https-internet-fw" add-rule --start-port=443 --description="HTTPS IPv4" "0.0.0.0/0"
 
 ubi fw "${LOCATION}/${PREFIX}-valkey-fw" create --description="Valkey internal access"
 ubi fw "${LOCATION}/${PREFIX}-pg-fw" create --description="PostgreSQL internal access"
+
 
 # 3. Create subnets with firewalls
 ubi ps "${LOCATION}/${PREFIX}-valkey-subnet" create -f "${PREFIX}-valkey-fw"
@@ -158,7 +159,7 @@ done
 # 6. Configure internal firewalls
 for svc in web streaming sidekiq; do
   ubi fw "${LOCATION}/${PREFIX}-valkey-fw" add-rule \
-    --start-port=6379 --end-port=6379 \
+    --start-port=6379 \
     --description="Allow Valkey from ${svc}" \
     "${PREFIX}-${svc}-subnet"
 done

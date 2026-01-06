@@ -21,29 +21,19 @@ for lb in web streaming; do
   fi
 done
 
-# 3. Destroy PostgreSQL and its firewall
-if ubi pg "${LOCATION}/${PREFIX}-pg" show &>/dev/null; then
-  PG_ID=$(ubi pg "${LOCATION}/${PREFIX}-pg" show -f id | grep "id:" | sed 's/id: //' || true)
-  echo "PostgreSQL ID: $PG_ID"
-  
-  if [ -n "$PG_ID" ]; then
-    if ubi fw "${LOCATION}/${PG_ID}-firewall" show &>/dev/null; then
-      echo "Destroying PostgreSQL firewall: ${PG_ID}-firewall"
-      ubi fw "${LOCATION}/${PG_ID}-firewall" destroy -f || true
-    fi
-  fi
-  
-  echo "Destroying PostgreSQL..."
-  ubi pg "${LOCATION}/${PREFIX}-pg" destroy -f || true
-fi
-
-# 4. Destroy custom firewalls
+# 3. Destroy custom firewalls
 for fw in ssh-internet-fw https-internet-fw valkey-fw pg-fw; do
   if ubi fw "${LOCATION}/${PREFIX}-${fw}" show &>/dev/null; then
     echo "Destroying firewall: ${fw}"
     ubi fw "${LOCATION}/${PREFIX}-${fw}" destroy -f || true
   fi
 done
+
+# 4. Destroy PostgreSQL
+if ubi pg "${LOCATION}/${PREFIX}-pg" show &>/dev/null; then
+  echo "Destroying PostgreSQL..."
+  ubi pg "${LOCATION}/${PREFIX}-pg" destroy -f || true
+fi
 
 # 5. Destroy subnets
 for ps in web-subnet streaming-subnet sidekiq-subnet valkey-subnet; do

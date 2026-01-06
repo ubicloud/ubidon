@@ -10,6 +10,7 @@ fi
 KEY_NAME="$1"
 LOCATION="eu-central-h1"
 PREFIX="mastodon-demo"
+PG_SUBNET="${PREFIX}-pg-subnet"
 RELAY_URL="https://relay.toot.io/inbox"
 
 # Helper function: wait for VM to be SSH-accessible
@@ -57,7 +58,8 @@ ubi pg "${LOCATION}/${PREFIX}-pg" create \
   --size=burstable-2 \
   --storage-size=64 \
   --version=18 \
-  --ha-type=none
+  --ha-type=none \
+  --private-subnet-name=${PG_SUBNET}
 
 # Poll for connection string
 echo "Waiting for PostgreSQL connection string..."
@@ -94,10 +96,6 @@ else
   DATABASE_URL_NODE="${DATABASE_URL}?sslmode=no-verify"
 fi
 
-PG_ID=$(ubi pg "${LOCATION}/${PREFIX}-pg" show -f id | grep "id:" | sed 's/id: //')
-PG_SUBNET=$(ubi ps list -l "$LOCATION" | awk "/${PG_ID}-subnet/ {print \$2}")
-
-echo "PostgreSQL subnet: $PG_SUBNET"
 echo "Database URL (Ruby): $DATABASE_URL_RUBY"
 echo "Database URL (Node): $DATABASE_URL_NODE"
 
@@ -160,7 +158,12 @@ done
 for svc in web streaming sidekiq; do
   ubi fw "${LOCATION}/${PREFIX}-valkey-fw" add-rule \
     --start-port=6379 \
-    --description="Allow Valkey from ${svc}" \
+    --description="Allow Valkey access from ${svc}" \
+    "${PREFIX}-${svc}-subnet"
+
+  ubi fw "${LOCATION}/${PREFIX}-pg-fw" add-rule \
+    --start-port 5432 \
+    --description="Allow PostgreSQL access from ${svc}" \
     "${PREFIX}-${svc}-subnet"
 done
 

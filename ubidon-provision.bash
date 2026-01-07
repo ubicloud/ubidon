@@ -123,6 +123,9 @@ ubi fw "${LOCATION}/${PREFIX}-ssh-internet-fw" attach-subnet "${PREFIX}-valkey-s
 ubi fw "${LOCATION}/${PREFIX}-ssh-internet-fw" attach-subnet "${PREFIX}-web-subnet"
 ubi fw "${LOCATION}/${PREFIX}-ssh-internet-fw" attach-subnet "${PREFIX}-streaming-subnet"
 
+# Attach PostgreSQL firewall to subnet
+ubi fw "${LOCATION}/${PREFIX}-pg-fw" attach-subnet "${PG_SUBNET}"
+
 # 4. Create load balancers EARLY (so cert provisioning happens in parallel)
 echo "Creating load balancers (cert provisioning will happen in background)..."
 

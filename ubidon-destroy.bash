@@ -23,15 +23,15 @@ for fw in ssh-internet-fw https-internet-fw valkey-fw pg-fw; do
   ubi fw "${LOCATION}/${PREFIX}-${fw}" destroy -f || true
 done
 
-# 4. Destroy subnets
-for ps in web-subnet streaming-subnet sidekiq-subnet valkey-subnet; do
+# 4. Destroy PostgreSQL
+echo "Destroying PostgreSQL..."
+ubi pg "${LOCATION}/${PREFIX}-pg" destroy -f || true
+
+# 5. Destroy subnets
+for ps in web-subnet streaming-subnet sidekiq-subnet valkey-subnet pg-subnet; do
   echo "Destroying subnet: ${ps}"
   ubi ps "${LOCATION}/${PREFIX}-${ps}" destroy -f || true
 done
-
-# 5. Destroy PostgreSQL
-echo "Destroying PostgreSQL..."
-ubi pg "${LOCATION}/${PREFIX}-pg" destroy -f || true
 
 echo "=========================================="
 echo "All resources destroyed."

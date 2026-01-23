@@ -1,4 +1,10 @@
 #!/bin/bash
+
+if [ $# != 0 ]; then
+  echo "Usage: $0"
+  exit 1
+fi
+
 set -uex
 set -o pipefail
 

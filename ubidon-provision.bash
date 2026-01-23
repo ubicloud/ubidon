@@ -59,7 +59,8 @@ ubi pg "${LOCATION}/${PREFIX}-pg" create \
   --storage-size=64 \
   --version=18 \
   --ha-type=none \
-  --private-subnet-name=${PG_SUBNET}
+  --private-subnet-name=${PG_SUBNET} \
+  --restrict-by-default
 
 # Poll for connection string
 echo "Waiting for PostgreSQL connection string..."

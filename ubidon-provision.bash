@@ -777,7 +777,7 @@ Admin login credentials:
 Next steps:
   1. Log in at: https://${WEB_LB_HOSTNAME}/auth/sign_in
   2. Add federation relay at: https://${WEB_LB_HOSTNAME}/admin/relays
-     - Click 'Add New Relay'
+     - Click 'Setup a relay connection'
      - Enter relay URL: ${RELAY_URL}
      - Click 'Save and enable'
   3. Configure instance settings at: https://${WEB_LB_HOSTNAME}/admin/settings/edit

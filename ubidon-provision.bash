@@ -1,11 +1,12 @@
 #!/bin/bash
-set -uex
-set -o pipefail
 
-if [ -z "$1" ]; then
+if [ $# != 1 ]; then
   echo "Usage: $0 <ssh-key-name>"
   exit 1
 fi
+
+set -uex
+set -o pipefail
 
 KEY_NAME="$1"
 LOCATION="eu-central-h1"
